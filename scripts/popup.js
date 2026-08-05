@@ -6,7 +6,7 @@ let api = getBrowser();
 // Redirect elements to onboarding
 const welcomeUrl = api.runtime.getURL('welcome.html');
 $('#welcome_URL').attr('href', welcomeUrl);
-$('#lc_setup_btn, #gfg_setup_btn').on('click', (e) => {
+$('#lc_setup_btn, #gfg_setup_btn, #cc_setup_btn').on('click', (e) => {
   e.preventDefault();
   api.tabs.create({ url: welcomeUrl });
 });
@@ -22,13 +22,19 @@ let platformToReset = null;
 
 const showResetConfirmation = (platform) => {
   platformToReset = platform;
-  const name = platform === 'leetcode' ? 'LeetCode' : 'GeeksforGeeks';
+  let name = 'LeetCode';
+  if (platform === 'gfg') {
+    name = 'GeeksforGeeks';
+  } else if (platform === 'codechef') {
+    name = 'CodeChef';
+  }
   $('#reset_msg').text(`Are you sure you want to delete your ${name} stats?`);
   $('#reset_confirmation').show();
 };
 
 $('#lc_reset').on('click', () => showResetConfirmation('leetcode'));
 $('#gfg_reset').on('click', () => showResetConfirmation('gfg'));
+$('#cc_reset').on('click', () => showResetConfirmation('codechef'));
 
 $('#reset_no').on('click', () => {
   $('#reset_confirmation').hide();
@@ -50,6 +56,13 @@ $('#reset_yes').on('click', () => {
       $('#gfg_medium').text(0);
       $('#gfg_hard').text(0);
     });
+  } else if (platformToReset === 'codechef') {
+    api.storage.local.set({ codechef_stats: null }, () => {
+      $('#cc_solved').text(0);
+      $('#cc_easy').text(0);
+      $('#cc_medium').text(0);
+      $('#cc_hard').text(0);
+    });
   }
   $('#reset_confirmation').hide();
   platformToReset = null;
@@ -70,7 +83,7 @@ api.storage.local.get('leethub_token', data => {
         if (xhr.status === 200) {
           $('#authorized_mode').show();
           
-          api.storage.local.get(['leethub_hook', 'gfg_hook', 'stats', 'gfg_stats'], storage => {
+          api.storage.local.get(['leethub_hook', 'gfg_hook', 'codechef_hook', 'stats', 'gfg_stats', 'codechef_stats'], storage => {
             // LeetCode Panel setup
             if (storage.leethub_hook) {
               const lcStats = storage.stats;
@@ -101,6 +114,22 @@ api.storage.local.get('leethub_token', data => {
               $('#gfg_linked_view').show();
             } else {
               $('#gfg_unlinked_view').show();
+            }
+
+            // CodeChef Panel setup
+            if (storage.codechef_hook) {
+              const ccStats = storage.codechef_stats;
+              $('#cc_solved').text(ccStats?.solved ?? 0);
+              $('#cc_easy').text(ccStats?.easy ?? 0);
+              $('#cc_medium').text(ccStats?.medium ?? 0);
+              $('#cc_hard').text(ccStats?.hard ?? 0);
+              
+              $('#cc_repo_link').html(
+                `<a target="blank" style="color: cadetblue !important;" href="https://github.com/${storage.codechef_hook}">${storage.codechef_hook}</a>`
+              );
+              $('#cc_linked_view').show();
+            } else {
+              $('#cc_unlinked_view').show();
             }
           });
 

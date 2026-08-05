@@ -24,10 +24,9 @@ const getLinkErrorString = (statusCode, name) => {
 
 /* Sync's local storage with persistent stats and returns the pulled stats. */
 const syncStats = async (platform) => {
-  const isLeet = platform === 'leetcode';
-  const hookKey = isLeet ? 'leethub_hook' : 'gfg_hook';
-  const statsKey = isLeet ? 'stats' : 'gfg_stats';
-  const syncKey = isLeet ? 'sync_stats' : 'gfg_sync_stats';
+  const hookKey = platform === 'leetcode' ? 'leethub_hook' : (platform === 'gfg' ? 'gfg_hook' : 'codechef_hook');
+  const statsKey = platform === 'leetcode' ? 'stats' : (platform === 'gfg' ? 'gfg_stats' : 'codechef_stats');
+  const syncKey = platform === 'leetcode' ? 'sync_stats' : (platform === 'gfg' ? 'gfg_sync_stats' : 'codechef_sync_stats');
 
   let storage = await api.storage.local.get([
     'leethub_token',
@@ -65,7 +64,7 @@ const syncStats = async (platform) => {
   let pStatsJson = decodeURIComponent(escape(atob(data.content)));
   let pStats = await JSON.parse(pStatsJson);
 
-  const statsObj = isLeet ? pStats.leetcode : pStats.gfg;
+  const statsObj = platform === 'leetcode' ? pStats.leetcode : (platform === 'gfg' ? pStats.gfg : pStats.codechef);
 
   await api.storage.local.set({ [statsKey]: statsObj, [syncKey]: false });
   console.log(`Successfully synced local stats with GitHub stats for ${platform}`);
@@ -74,27 +73,28 @@ const syncStats = async (platform) => {
 };
 
 const createRepo = async (token, name, platform) => {
-  const isLeet = platform === 'leetcode';
-  const hookKey = isLeet ? 'leethub_hook' : 'gfg_hook';
-  const statsKey = isLeet ? 'stats' : 'gfg_stats';
-  const errId = isLeet ? '#lc_error' : '#gfg_error';
-  const successId = isLeet ? '#lc_success' : '#gfg_success';
-  const modeId = isLeet ? '#lc_hook_mode' : '#gfg_hook_mode';
-  const commitId = isLeet ? '#lc_commit_mode' : '#gfg_commit_mode';
-  const repoUrlId = isLeet ? '#lc_repo_url' : '#gfg_repo_url';
-  const solvedId = isLeet ? '#lc_p_solved' : '#gfg_p_solved';
-  const easyId = isLeet ? '#lc_p_solved_easy' : '#gfg_p_solved_easy';
-  const medId = isLeet ? '#lc_p_solved_medium' : '#gfg_p_solved_medium';
-  const hardId = isLeet ? '#lc_p_solved_hard' : '#gfg_p_solved_hard';
+  const hookKey = platform === 'leetcode' ? 'leethub_hook' : (platform === 'gfg' ? 'gfg_hook' : 'codechef_hook');
+  const statsKey = platform === 'leetcode' ? 'stats' : (platform === 'gfg' ? 'gfg_stats' : 'codechef_stats');
+  
+  const prefix = platform === 'leetcode' ? 'lc' : (platform === 'gfg' ? 'gfg' : 'cc');
+  const errId = `#${prefix}_error`;
+  const successId = `#${prefix}_success`;
+  const modeId = `#${prefix}_hook_mode`;
+  const commitId = `#${prefix}_commit_mode`;
+  const repoUrlId = `#${prefix}_repo_url`;
+  const solvedId = `#${prefix}_p_solved`;
+  const easyId = `#${prefix}_p_solved_easy`;
+  const medId = `#${prefix}_p_solved_medium`;
+  const hardId = `#${prefix}_p_solved_hard`;
 
   const AUTHENTICATION_URL = 'https://api.github.com/user/repos';
   let data = {
     name,
     private: true,
     auto_init: true,
-    description: isLeet 
+    description: platform === 'leetcode' 
       ? 'A collection of LeetCode questions to ace the coding interview! - Created using LeetHub v2'
-      : 'A collection of GeeksforGeeks questions - Created using LeetHub v2',
+      : (platform === 'gfg' ? 'A collection of GeeksforGeeks questions - Created using LeetHub v2' : 'A collection of CodeChef questions - Created using LeetHub v2'),
   };
 
   const options = {
@@ -134,19 +134,20 @@ const createRepo = async (token, name, platform) => {
 };
 
 const linkRepo = (token, name, platform) => {
-  const isLeet = platform === 'leetcode';
-  const hookKey = isLeet ? 'leethub_hook' : 'gfg_hook';
-  const statsKey = isLeet ? 'stats' : 'gfg_stats';
-  const syncKey = isLeet ? 'sync_stats' : 'gfg_sync_stats';
-  const errId = isLeet ? '#lc_error' : '#gfg_error';
-  const successId = isLeet ? '#lc_success' : '#gfg_success';
-  const modeId = isLeet ? '#lc_hook_mode' : '#gfg_hook_mode';
-  const commitId = isLeet ? '#lc_commit_mode' : '#gfg_commit_mode';
-  const repoUrlId = isLeet ? '#lc_repo_url' : '#gfg_repo_url';
-  const solvedId = isLeet ? '#lc_p_solved' : '#gfg_p_solved';
-  const easyId = isLeet ? '#lc_p_solved_easy' : '#gfg_p_solved_easy';
-  const medId = isLeet ? '#lc_p_solved_medium' : '#gfg_p_solved_medium';
-  const hardId = isLeet ? '#lc_p_solved_hard' : '#gfg_p_solved_hard';
+  const hookKey = platform === 'leetcode' ? 'leethub_hook' : (platform === 'gfg' ? 'gfg_hook' : 'codechef_hook');
+  const statsKey = platform === 'leetcode' ? 'stats' : (platform === 'gfg' ? 'gfg_stats' : 'codechef_stats');
+  const syncKey = platform === 'leetcode' ? 'sync_stats' : (platform === 'gfg' ? 'gfg_sync_stats' : 'codechef_sync_stats');
+  
+  const prefix = platform === 'leetcode' ? 'lc' : (platform === 'gfg' ? 'gfg' : 'cc');
+  const errId = `#${prefix}_error`;
+  const successId = `#${prefix}_success`;
+  const modeId = `#${prefix}_hook_mode`;
+  const commitId = `#${prefix}_commit_mode`;
+  const repoUrlId = `#${prefix}_repo_url`;
+  const solvedId = `#${prefix}_p_solved`;
+  const easyId = `#${prefix}_p_solved_easy`;
+  const medId = `#${prefix}_p_solved_medium`;
+  const hardId = `#${prefix}_p_solved_hard`;
 
   const AUTHENTICATION_URL = `https://api.github.com/repos/${name}`;
 
@@ -207,13 +208,14 @@ const linkRepo = (token, name, platform) => {
 };
 
 const unlinkRepo = (platform) => {
-  const isLeet = platform === 'leetcode';
-  const hookKey = isLeet ? 'leethub_hook' : 'gfg_hook';
-  const statsKey = isLeet ? 'stats' : 'gfg_stats';
-  const syncKey = isLeet ? 'sync_stats' : 'gfg_sync_stats';
-  const modeId = isLeet ? '#lc_hook_mode' : '#gfg_hook_mode';
-  const commitId = isLeet ? '#lc_commit_mode' : '#gfg_commit_mode';
-  const successId = isLeet ? '#lc_success' : '#gfg_success';
+  const hookKey = platform === 'leetcode' ? 'leethub_hook' : (platform === 'gfg' ? 'gfg_hook' : 'codechef_hook');
+  const statsKey = platform === 'leetcode' ? 'stats' : (platform === 'gfg' ? 'gfg_stats' : 'codechef_stats');
+  const syncKey = platform === 'leetcode' ? 'sync_stats' : (platform === 'gfg' ? 'gfg_sync_stats' : 'codechef_sync_stats');
+  
+  const prefix = platform === 'leetcode' ? 'lc' : (platform === 'gfg' ? 'gfg' : 'cc');
+  const modeId = `#${prefix}_hook_mode`;
+  const commitId = `#${prefix}_commit_mode`;
+  const successId = `#${prefix}_success`;
 
   api.storage.local.set(
     { [hookKey]: null, [syncKey]: true, [statsKey]: null },
@@ -235,13 +237,16 @@ $('#lc_type').on('change', function () {
 $('#gfg_type').on('change', function () {
   $('#gfg_hook_button').attr('disabled', !this.value);
 });
+$('#cc_type').on('change', function () {
+  $('#cc_hook_button').attr('disabled', !this.value);
+});
 
 const handleHookClick = (platform) => {
-  const isLeet = platform === 'leetcode';
-  const typeId = isLeet ? '#lc_type' : '#gfg_type';
-  const nameId = isLeet ? '#lc_name' : '#gfg_name';
-  const errId = isLeet ? '#lc_error' : '#gfg_error';
-  const successId = isLeet ? '#lc_success' : '#gfg_success';
+  const prefix = platform === 'leetcode' ? 'lc' : (platform === 'gfg' ? 'gfg' : 'cc');
+  const typeId = `#${prefix}_type`;
+  const nameId = `#${prefix}_name`;
+  const errId = `#${prefix}_error`;
+  const successId = `#${prefix}_success`;
 
   const typeVal = $(typeId).val();
   const nameVal = $(nameId).val().trim();
@@ -279,15 +284,17 @@ const handleHookClick = (platform) => {
 
 $('#lc_hook_button').on('click', () => handleHookClick('leetcode'));
 $('#gfg_hook_button').on('click', () => handleHookClick('gfg'));
+$('#cc_hook_button').on('click', () => handleHookClick('codechef'));
 
 $('#lc_unlink').on('click', () => unlinkRepo('leetcode'));
 $('#gfg_unlink').on('click', () => unlinkRepo('gfg'));
+$('#cc_unlink').on('click', () => unlinkRepo('codechef'));
 
 // Initialization logic
-api.storage.local.get(['leethub_token', 'leethub_hook', 'gfg_hook'], (data) => {
+api.storage.local.get(['leethub_token', 'leethub_hook', 'gfg_hook', 'codechef_hook'], (data) => {
   const token = data.leethub_token;
   if (!token) {
-    $('#lc_error, #gfg_error').text('Please click the extension icon to authenticate with GitHub first.').show();
+    $('#lc_error, #gfg_error, #cc_error').text('Please click the extension icon to authenticate with GitHub first.').show();
     return;
   }
 
@@ -301,5 +308,11 @@ api.storage.local.get(['leethub_token', 'leethub_hook', 'gfg_hook'], (data) => {
     linkRepo(token, data.gfg_hook, 'gfg');
   } else {
     $('#gfg_hook_mode').show();
+  }
+
+  if (data.codechef_hook) {
+    linkRepo(token, data.codechef_hook, 'codechef');
+  } else {
+    $('#cc_hook_mode').show();
   }
 });

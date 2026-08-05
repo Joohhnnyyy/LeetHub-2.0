@@ -39,6 +39,10 @@
         "https://www.geeksforgeeks.org/problems/*"
       ],
       "js": ["scripts/gfg.js"]
+    },
+    {
+      "matches": ["*://*.codechef.com/*"],
+      "js": ["scripts/codechef.js"]
     }
   ],
   "content_security_policy": {
